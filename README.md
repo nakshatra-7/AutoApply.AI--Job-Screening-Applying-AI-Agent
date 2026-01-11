@@ -122,10 +122,10 @@ Open docs: `http://127.0.0.1:8000/docs`
 ## Supported portals (demo scope)
 
 - Workday (primary)
-- Greenhouse (planned)
-- Lever (planned)
+- Greenhouse 
+- Lever
 
-This project is intentionally scoped to a few portals for reliability and recruiter-friendly demos. It does not attempt to auto-apply across all websites.
+This project is intentionally scoped to a few portals for reliability and recruiter-friendly demos. 
 
 ## Notes
 
