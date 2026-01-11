@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16
+    container_name: autoapply_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: autoapply
+      POSTGRES_PASSWORD: autoapply
+      POSTGRES_DB: job_filler
+    ports:
+      - "5433:5432"
+    volumes:
+      - autoapply_pgdata:/var/lib/postgresql/data
+
+volumes:
+  autoapply_pgdata:

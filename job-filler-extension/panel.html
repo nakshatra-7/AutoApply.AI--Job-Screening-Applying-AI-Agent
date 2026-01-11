@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Job Filler</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <h3 class="title">Job Filler</h3>
+
+    <div class="card">
+      <div class="label">Resume Upload</div>
+      <input id="resumeFile" type="file" />
+      <div class="row">
+        <button id="uploadResume" class="btn">Upload Resume</button>
+      </div>
+      <div class="small">Resume will be parsed to seed profile basics.</div>
+    </div>
+
+    <details class="card collapsible">
+      <summary class="label">Advanced</summary>
+      <div class="label">Backend URL</div>
+      <input id="baseUrl" value="http://127.0.0.1:8000" />
+      <div class="label" style="margin-top:8px;">User ID</div>
+      <input id="userId" placeholder="User ID for profile fetch" />
+      <div class="label" style="margin-top:12px;">Fetched Profile</div>
+      <pre id="profilePreview" class="muted">No profile loaded.</pre>
+    </details>
+
+    <div class="card">
+      <div class="label">Workday Account (for Apply + Fill)</div>
+      <input id="accountEmail" placeholder="Email" />
+      <input id="accountPassword" type="password" placeholder="Password" />
+      <input id="accountPasswordConfirm" type="password" placeholder="Confirm password" />
+      <div class="small">Stored locally to avoid retyping.</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Actions</div>
+      <div class="row">
+        <button id="runOneClick" class="btn primary">Run</button>
+        <button id="applyBeta" class="btn">Apply + Fill (Beta)</button>
+      </div>
+
+      <label class="toggle">
+        <input type="checkbox" id="autorun" checked />
+        Auto-run
+      </label>
+
+      <div id="status" class="status">Ready.</div>
+    </div>
+    <div class="card">
+      <div class="label">Apply + Fill (Beta) Log</div>
+      <div id="resumeBanner" class="resumeBanner hidden"></div>
+      <pre id="logOutput" class="muted">No run yet.</pre>
+    </div>
+
+    <script src="panel.js"></script>
+  </body>
+</html>
