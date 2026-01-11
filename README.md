@@ -1,6 +1,6 @@
 # Job Filler Agent (AutoApply Agent)
 
-An AI‑agentic job application assistant focused on a few popular portals (Workday first, Greenhouse/Lever next). It combines a FastAPI backend for profile/resume intelligence with a Chrome side‑panel extension that extracts job context, generates structured fill packets, and executes best‑effort form fills on supported portals.
+An AI‑agentic job application assistant focused on a few popular portals (Workday, Greenhouse, Lever). It combines a FastAPI backend for profile/resume intelligence with a Chrome side‑panel extension that extracts job context, generates structured fill packets, and executes best‑effort form fills on supported portals.
 
 ## What it does
 
@@ -129,10 +129,7 @@ This project is intentionally scoped to a few portals for reliability and recrui
 
 ## Notes
 
-- The Workday flow is best-effort and may require manual steps (captchas, file pickers).
+- The Workday flow is best-effort and may require manual steps because browsers block some automated actions; CAPTCHAs must be solved by a human, and file pickers can only be opened and confirmed via direct user interaction.
 - The extension does not auto-submit final applications.
 - Vector search is scaffolded; plug in pgvector or another vector DB as needed.
 
-## License
-
-MIT (update if you need a different license).
