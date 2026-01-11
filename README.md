@@ -1,28 +1,107 @@
-# Job Filler Agent API
+# Job Filler Agent (AutoApply Agent)
 
-FastAPI backend scaffold for an automatic job application filler. All endpoints are stubbed with in-memory state for quick iteration.
+An AI‑agentic job application assistant focused on a few popular portals (Workday first, Greenhouse/Lever next). It combines a FastAPI backend for profile/resume intelligence with a Chrome side‑panel extension that extracts job context, generates structured fill packets, and executes best‑effort form fills on supported portals.
 
-## Quickstart
+## What it does
+
+- Reads job context from the current page (JD, title, company hints).
+- Runs an agentic loop to build a fill packet and decision data.
+- Generates structured outputs:
+  - Screening answers
+  - Short cover letter
+  - One‑liner
+  - Resume keywords
+  - Packet fields (location, work auth, notice period, etc.)
+- Stores user profiles, resumes, and application history in Postgres.
+- Executes a Workday‑focused Apply + Fill flow (best‑effort, no auto‑submit).
+- Handles resume/photo uploads via guided file picker + auto‑continue.
+
+## Tech stack
+
+- Backend: FastAPI, SQLAlchemy, Alembic, Pydantic
+- DB: Postgres (Docker-friendly)
+- Vector search (planned): pgvector or external vector DB
+- Extension: Chrome MV3 side panel, content scripts, vanilla JS/HTML/CSS
+
+## Project layout
+
+- `app/` FastAPI app, routers, services, models
+- `alembic/` migrations
+- `job-filler-extension/` Chrome extension (panel + content script)
+- `scripts/` helper scripts
+
+## Agentic workflow (high‑level)
+
+The backend orchestrator runs a Think → Act → Observe → Decide loop and keeps state, observations, and actions. The flow is intentionally narrow and deterministic so it’s reliable for demos:
+
+1) **Plan** next tool call based on current state  
+2) **Act** using tools (profile, mapping, drafting, analysis)  
+3) **Observe** results + update state  
+4) **Decide** next step or stop  
+
+This is designed to be extended later with richer tools and reasoning.
+
+## Run locally
+
+### 1) Start Postgres (Docker)
+
+If you use the provided Docker config:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+docker compose up -d
 ```
 
-Open docs at http://localhost:8000/docs
+Confirm the Postgres port (common: `5433` mapped to container `5432`):
 
-## Available endpoints
-- `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`
-- `GET /profile/get`, `PUT /profile/update`
-- `POST /resume/upload`
-- `POST /github/connect`, `POST /github/sync`
-- `POST /job/analyse`
-- `POST /agent/run`
-- `POST /application/log`, `GET /application/log`
+```bash
+docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
+```
 
-State persists in memory only. Replace services with real storage/LLM integrations as you build features.
+### 2) Set DATABASE_URL
+
+Update `.env` or export it before running:
+
+```bash
+export DATABASE_URL=postgresql+psycopg://autoapply:autoapply@localhost:5433/job_filler
+```
+
+### 3) Run migrations
+
+```bash
+python -m alembic upgrade head
+```
+
+### 4) Start the API
+
+```bash
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Open docs: `http://127.0.0.1:8000/docs`
+
+## Extension setup
+
+1) Open `chrome://extensions` and enable Developer mode.
+2) Click "Load unpacked" and select `job-filler-extension/`.
+3) Open a supported job page and open the side panel.
+
+### Recommended flow
+
+1) Upload resume in the extension (Resume Upload card).
+2) Use Apply + Fill (Beta) on a Workday job page.
+3) When file picker opens, select your file.
+4) The extension will auto-continue after the upload completes.
+
+## Key endpoints
+
+- Auth: `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`
+- Profile: `GET /profile/get`, `PUT /profile/update`
+- Resume: `POST /resume/upload`
+- GitHub: `POST /github/connect`, `POST /github/sync`
+- Job analysis: `POST /job/analyse`
+- Agent: `POST /agent/run`, `POST /agent/continue`
+- Applications: `POST /application/log`, `GET /application/log`
+- Fill packet: `POST /agent/fill_packet`
 
 ## Data model (Postgres)
 
@@ -32,14 +111,28 @@ State persists in memory only. Replace services with real storage/LLM integratio
 - `applications`: id, user_id, company, job_title, job_url, applied_at, used_resume_id, fit_score, status
 - `answers`: id, application_id, question_text, answer_text, char_limit, edited_by_user
 - `user_settings`: id, user_id, default_tone, default_resume_type, default_location, notification_preferences
+- `user_facts`: id, user_id, key, value, source, last_confirmed_at, created_at, updated_at
+- `agent_runs`, `agent_step_logs` for audit trails
 
-SQLAlchemy models are defined in `app/models/db_models.py`; configure `DATABASE_URL` via env (defaults to local Postgres).
+## Local configuration tips
 
-## Vector search plan
+- If you use Docker for Postgres, ensure `DATABASE_URL` points to the mapped port (often `5433`).
+- If profile fetch returns 500, the DB is not reachable or URL is wrong.
 
-Use a vector DB (pgvector/Pinecone/etc.) to index:
-- Project/experience bullets (JD ↔ relevant work)
-- Resume summaries (auto-select best resume)
-- Past Q&A (reuse/adapt answers)
+## Supported portals (demo scope)
 
-`app/services/vector_store.py` and `app/services/recommendations.py` hold stubs to swap in a real vector client and embedding calls.
+- Workday (primary)
+- Greenhouse (planned)
+- Lever (planned)
+
+This project is intentionally scoped to a few portals for reliability and recruiter-friendly demos. It does not attempt to auto-apply across all websites.
+
+## Notes
+
+- The Workday flow is best-effort and may require manual steps (captchas, file pickers).
+- The extension does not auto-submit final applications.
+- Vector search is scaffolded; plug in pgvector or another vector DB as needed.
+
+## License
+
+MIT (update if you need a different license).
